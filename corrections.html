@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Corrections – LiveMocha 2026</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body{margin:0;font-family:system-ui;background:#f9fafb;min-height:100vh;padding:2rem;}
+    .recording{background:white;padding:1.5rem;margin:1rem 0;border-radius:1rem;box-shadow:0 4px 20px rgba(0,0,0,0.05);}
+    audio{width:100%;margin:1rem 0;}
+    button{background:#dc2626;color:white;padding:0.8rem 1.5rem;border:none;border-radius:0.8rem;}
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center;color:#1e40af;">Community Corrections</h1>
+  <div id="list"></div>
+
+  <script>
+    const supabase = Supabase.createClient(
+      'https://YOUR-PROJECT.supabase.co',     // ← same URL
+      'YOUR-ANON-KEY-HERE'                    // ← same key
+    )
+
+    async function loadRecordings() {
+      const { data } = await supabase.storage.from('recordings').list('public')
+      const list = document.getElementById('list')
+      list.innerHTML = ''
+
+      data.forEach(file => {
+        const url = supabase.storage.from('recordings').getPublicUrl('public/' + file.name).data.publicUrl
+        const div = document.createElement('div')
+        div.className = 'recording'
+        div.innerHTML = `
+          <p><strong>Someone said "Olá":</strong></p>
+          <audio controls src="${url}"></audio>
+          <p><em>Leave a correction:</em></p>
+          <audio controls src="https://cdn.glitch.global/your-correction-placeholder.mp3"></audio>
+          <button onclick="alert('Voice correction coming in Day 4!')">Record correction</button>
+        `
+        list.appendChild(div)
+      })
+    }
+
+    loadRecordings()
+  </script>
+</body>
+</html>
