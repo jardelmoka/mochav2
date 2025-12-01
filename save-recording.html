@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Save Recording – LiveMocha</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body{margin:0;font-family:system-ui;background:#f3f4f6;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;}
+    .card{background:white;padding:3rem 2rem;border-radius:1.5rem;box-shadow:0 15px 40px rgba(0,0,0,0.1);text-align:center;width:90%;max-width:500px;}
+    button{background:#1e40af;color:white;padding:1rem 2rem;border:none;border-radius:1rem;font-size:1.2rem;margin:0.8rem;cursor:pointer;}
+    audio{width:100%;margin-top:1rem;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Olá</h1>
+    <p>Record yourself saying "Olá"</p>
+
+    <button onclick="start()">Start recording</button>
+    <button onclick="stop()" id="stop" disabled>Stop</button>
+    <button onclick="upload()" id="upload" disabled>Upload recording</button>
+
+    <audio id="audio" controls style="display:none;"></audio>
+    <p id="status" style="margin-top:1rem;color:green;"></p>
+    <p><a href="flashcard.html">← Back</a></p>
+  </div>
+
+  <script>
+    const supabase = Supabase.createClient(
+      'https://YOUR-PROJECT.supabase.co',     // ← same URL as before
+      'YOUR-ANON-KEY-HERE'                    // ← same key as before
+    )
+
+    let recorder, audioBlob
+    const audioEl = document.getElementById('audio')
+    const stopBtn = document.getElementById('stop')
+    const uploadBtn = document.getElementById('upload')
+    const status = document.getElementById('status')
+
+    async function start() {
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true})
+      recorder = new MediaRecorder(stream)
+      recorder.start()
+      stopBtn.disabled = false
+      recorder.ondataavailable = e => audioBlob = e.data
+      recorder.onstop = () => {
+        audioEl.src = URL.createObjectURL(audioBlob)
+        audioEl.style.display = 'block'
+        uploadBtn.disabled = false
+      }
+    }
+
+    function stop() {
+      recorder.stop()
+      stopBtn.disabled = true
+    }
+
+    async function upload() {
+      const { data, error } = await supabase.storage
+        .from('recordings')
+        .upload(`public/${Date.now()}.webm`, audioBlob)
+      if (error) status.textContent = 'Error: ' + error.message
+      else status.textContent = 'Saved forever! Share this link: ' + data.path
+    }
+  </script>
+</body>
+</html>
