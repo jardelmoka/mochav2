@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – LiveMocha 2026</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body{margin:0;font-family:system-ui;background:#f3f4f6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;}
+    .box{background:white;padding:2rem;border-radius:1rem;box-shadow:0 10px 30px rgba(0,0,0,0.1);width:100%;max-width:400px;text-align:center;}
+    input,button{width:100%;padding:1rem;margin:0.5rem 0;border-radius:0.5rem;border:1px solid #ddd;font-size:1rem;}
+    button{background:#1e40af;color:white;border:none;cursor:pointer;}
+    a{color:#1e40af;}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>LiveMocha 2026</h1>
+    <p><small>Sign up or log in</small></p>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="signup()">Create account</button>
+    <button onclick="login()">Log in</button>
+    <p style="margin-top:1rem;"><a href="index.html">← Back home</a></p>
+  </div>
+
+  <script>
+    const supabase = Supabase.createClient(
+      'https://ngrcptuglhgfkhfjmuwn.supabase.co',     // ← YOU WILL REPLACE THIS
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ncmNwdHVnbGhnZmtoZmptdXduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MjcwNjksImV4cCI6MjA4MDEwMzA2OX0.w6unwHhfNkDaiMH9goVqw5qeZby1JYk1QQHWuZNyyB0'   // ← AND THIS
+    )
+
+    async function signup() {
+      const { error } = await supabase.auth.signUp({
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value
+      })
+      alert(error ? error.message : 'Check your email for confirmation link!')
+    }
+
+    async function login() {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value
+      })
+      if (error) alert(error.message)
+      else location.href = 'flashcard.html'
+    }
+  </script>
+</body>
+</html>
