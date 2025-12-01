@@ -1,48 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Corrections – LiveMocha 2026</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body{margin:0;font-family:system-ui;background:#f9fafb;min-height:100vh;padding:2rem;}
-    .recording{background:white;padding:1.5rem;margin:1rem 0;border-radius:1rem;box-shadow:0 4px 20px rgba(0,0,0,0.05);}
-    audio{width:100%;margin:1rem 0;}
-    button{background:#dc2626;color:white;padding:0.8rem 1.5rem;border:none;border-radius:0.8rem;}
-  </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Corrections – LiveMocha 2026</title>
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+ <style>
+ body{margin:0;font-family:system-ui;background:#f9fafb;min-height:100vh;padding:2rem;}
+ .rec{background:white;padding:2rem;margin:1rem 0;border-radius:1.5rem;box-shadow:0 10px 30px rgba(0,0,0,0.08);}
+ audio{width:100%;margin:1rem 0;}
+ button{background:#dc2626;color:white;padding:1rem;border:none;border-radius:1rem;font-size:1.1rem ;}
+ </style>
 </head>
 <body>
-  <h1 style="text-align:center;color:#1e40af;">Community Corrections</h1>
-  <div id="list"></div>
+ <h1 style="text-align:center;color:#1e40af;margin-bottom:2rem;">Community Corrections</h1>
+ <div id="list"></div>
 
-  <script>
-    const supabase = Supabase.createClient(
-      'https://YOUR-PROJECT.supabase.co',     // ← same URL
-      'YOUR-ANON-KEY-HERE'                    // ← same key
-    )
+ <script>
+ const supabase = Supabase.createClient('https://ngrcptuglhgfkhfjmuwn.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ncmNwdHVnbGhnZmtoZmptdXduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MjcwNjksImV4cCI6MjA4MDEwMzA2OX0.w6unwHhfNkDaiMH9goVqw5qeZby1JYk1QQHWuZNyyB0')
 
-    async function loadRecordings() {
-      const { data } = await supabase.storage.from('recordings').list('public')
-      const list = document.getElementById('list')
-      list.innerHTML = ''
+ async function load() {
+ const { data } = await supabase.storage.from('recordings').list('')
+ const list = document.getElementById('list')
+ list.innerHTML = data.length === 0 ? '<p style="text-align:center;color:#666;">No recordings yet – be the first!</p>' : ''
 
-      data.forEach(file => {
-        const url = supabase.storage.from('recordings').getPublicUrl('public/' + file.name).data.publicUrl
-        const div = document.createElement('div')
-        div.className = 'recording'
-        div.innerHTML = `
-          <p><strong>Someone said "Olá":</strong></p>
-          <audio controls src="${url}"></audio>
-          <p><em>Leave a correction:</em></p>
-          <audio controls src="https://cdn.glitch.global/your-correction-placeholder.mp3"></audio>
-          <button onclick="alert('Voice correction coming in Day 4!')">Record correction</button>
-        `
-        list.appendChild(div)
-      })
-    }
+ data.forEach(async file => {
+ const { data: { publicUrl } } = supabase.storage.from('recordings').getPublicUrl(file.name)
+ const div = document.createElement('div')
+ div.className = 'rec'
+ div.innerHTML = `
+ <p><strong>Someone said "Olá":</strong></p>
+ <audio controls src="${publicUrl}"></audio>
+ <p><em>Leave a voice correction:</em></p>
+ <button onclick="recordCorrection('${file.name}')">Record correction</button>
+ <audio id="corr-${file.name}" controls style="display:none;"></audio>
+ <p id="status-${file.name}" style="color:green;"></p>
+ `
+ list.appendChild(div)
+ })
+ }
 
-    loadRecordings()
-  </script>
+ async function recordCorrection(filename) {
+ const stream = await navigator.mediaDevices.getUserMedia({audio:true})
+ const recorder = new MediaRecorder(stream)
+ let chunks = []
+ recorder.ondataavailable = e => chunks.push(e.data)
+ recorder.onstop = async () => {
+ const blob = new Blob(chunks, {type:'audio/webm'})
+ const path = `corrections/${filename}_${Date.now()}.webm`
+ await supabase.storage.from('recordings').upload(path, blob)
+ document.getElementById(`status-${filename}`).textContent = 'Correction saved!'
+ }
+ recorder.start()
+ alert('Recording correction… tap OK when finished')
+ recorder.stop()
+ }
+
+ load()
+ </script>
 </body>
 </html>
